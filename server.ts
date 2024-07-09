@@ -72,11 +72,8 @@ io.on('connection', (socket: Socket) => {
   console.log(`New client connected ${socket.id}`);
 
   socket.on('joinRoom', ({ roomId, playerName }: JoinRoomData) => {
-    console.log(gameState.rooms);
     const room = gameState.rooms.get(roomId);
-    console.log(room);
     if (room && room.players.length < 2) {
-      console.log(4);
       socket.join(roomId);
       room.players.push({ id: socket.id, name: playerName });
       gameState.players.set(socket.id, { roomId, name: playerName });
@@ -121,12 +118,10 @@ io.on('connection', (socket: Socket) => {
   });
   
   socket.on('makeroom', (roomId) => {
-    console.log(1);
     if (gameState.rooms.has(roomId)) {
       
     }
     else {
-      console.log(2);
       gameState.rooms.set(roomId, { id: roomId, players: [], state: 'waiting' });
     }
   })

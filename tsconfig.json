@@ -1,0 +1,22 @@
+{
+  // "files": [ 컴파일 할 파일 목록
+  //   "hello.ts",
+  // ]
+  "include": [ // 컴파일 할 "폴더" 목록
+    "modules/**/*.ts"
+  ],
+  "exclude": [ // 컴파일 하지 않을 폴더 목록
+    "node_modules"
+  ],
+  "compilerOptions": { // 컴파일 옵션
+    "rootDir": "modules",  // 루트
+    "outDir": "jsmodules",  // 컴파일된 js파일 저장 위치
+    "target": "ES5",   // js 버전
+    "lib": [           // 컴파일시 필요한 라이브러리
+      "ES2015",
+      "DOM",
+    ],
+    "noImplicitAny": true, // 암시적 any 타입 허용 안함 (= true)
+    "experimentalDecorators": true
+  }
+}
