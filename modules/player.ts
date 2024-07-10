@@ -3,13 +3,13 @@ import Igamestate from "./state";
 import { Ivictory, KtuluVictory } from "./victory";
 
 interface Iplayer {
-  fields: Icard[],
-  hands: number,
-  influence: number,
-  deckType: string,
-  isAchieved: Ivictory;
-  sacrifice: number,
-  order: 0 | 1 | 2;
+  fields: Icard[],        // 카드 내는곳
+  hands: number,          // 손패 수, 손패 내용은 아직 미구현
+  influence: number,      // 세력 수
+  deckType: string,       // 덱타입, 승리조건을 위함
+  victorys: Ivictory[];   // 승리조건
+  sacrifice: number,      // 제물 바친 수
+  order: 0 | 1 | 2;       // 순서
 }
 
 class player implements Iplayer {
@@ -17,7 +17,7 @@ class player implements Iplayer {
   hands: number;
   influence: number;
   deckType: string;
-  isAchieved: Ivictory;
+  victorys: Ivictory[];
   sacrifice: number;
   order: 0 | 1 | 2;
 
@@ -35,7 +35,7 @@ class player implements Iplayer {
   private setVictory(): void {
     switch (this.deckType) {
       case 'Ktulu':
-        this.isAchieved = new KtuluVictory();
+        this.victorys.push(new KtuluVictory());
         break;
       // 다른 덱 타입들...
       default:
@@ -44,7 +44,12 @@ class player implements Iplayer {
   }
 
   isVictory(state: Igamestate): boolean {
-    return this.isAchieved.isVictory(state, this);
+    for (const victory of this.victorys) {
+      if (victory.isVictory(state, this)) {
+        return true;
+      }
+    }
+    return false;
   }
 }
 
