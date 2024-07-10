@@ -17,6 +17,7 @@
       "DOM",
     ],
     "noImplicitAny": true, // 암시적 any 타입 허용 안함 (= true)
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "esModuleInterop": true,
   }
 }
