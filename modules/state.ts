@@ -1,7 +1,15 @@
-import { Iplayer } from "./player";
+import player from "./player";
 
 interface Igamestate {
-  players: Iplayer[],
+  players: player[],
 }
 
-export default Igamestate;
+class state implements Igamestate {
+  players: player[];
+
+  constructor(players: player[]) {
+      this.players = [...players];
+  }
+}
+
+export default state;

@@ -1,23 +1,24 @@
-import { Icard } from "./card";
-import Igamestate from "./state";
-import { Ivictory, KtuluVictory } from "./victory";
+import card from "./card";
+import state from "./state";
+import victory from "./victory";
+import { KtuluVictory } from "./victorys";
 
 interface Iplayer {
-  fields: Icard[],        // 카드 내는곳
+  fields: card[],        // 카드 내는곳
   hands: number,          // 손패 수, 손패 내용은 아직 미구현
   influence: number,      // 세력 수
   deckType: string,       // 덱타입, 승리조건을 위함
-  victorys: Ivictory[];   // 승리조건
+  victorys: victory[];   // 승리조건
   sacrifice: number,      // 제물 바친 수
   order: 0 | 1 | 2;       // 순서
 }
 
 class player implements Iplayer {
-  fields: Icard[];
+  fields: card[];
   hands: number;
   influence: number;
   deckType: string;
-  victorys: Ivictory[];
+  victorys: victory[];
   sacrifice: number;
   order: 0 | 1 | 2;
 
@@ -43,7 +44,7 @@ class player implements Iplayer {
     }
   }
 
-  isVictory(state: Igamestate): boolean {
+  isVictory(state: state): boolean {
     for (const victory of this.victorys) {
       if (victory.isVictory(state, this)) {
         return true;
@@ -53,4 +54,4 @@ class player implements Iplayer {
   }
 }
 
-export {Iplayer, player};
+export default player;

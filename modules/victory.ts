@@ -1,17 +1,12 @@
-import { Iplayer } from "./player";
-import Igamestate from "./state";
-
+import player from "./player";
+import state from "./state";
+//TODO: victory class 만들기, default로 export하기, victorys 파일 분리하기.
 interface Ivictory {
-  isVictory(state: Igamestate, player: Iplayer): boolean;
+  isVictory: (state: state, player: player) => boolean;
 }
 
-class KtuluVictory implements Ivictory {
-  isVictory(state: Igamestate, player: Iplayer): boolean {
-    if (state.players[player.order].sacrifice >= 20) {
-      return true;
-    }
-    return false;
-  }
+abstract class victory implements Ivictory {
+  isVictory: (state: state, player: player) => boolean
 }
 
-export { Ivictory, KtuluVictory };
+export default victory;

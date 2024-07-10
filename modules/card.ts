@@ -1,4 +1,5 @@
 import state from "./state"
+import { openEffect, closeEffect, turnEndEffect } from "./effect";
 
 interface Icard {
   cardcode: number,           // 카드 코드, 코드 부여 규칙은 미정
@@ -7,9 +8,11 @@ interface Icard {
   canMissionary: boolean,     // 포교 할 수 있는지
   keyWords: string[],         // 도발등의 키워드
   createInfluence: number,    // 세력 생성치
+  religion: string[],         // 종교, 혹시 모르니까 배열로
 
-  whenOpen: (state: state) => state,                // 오픈 시 효과
-  whenInfluentialization: (state: state) => state,  // 세력화 시 효과
+  whenOpen: openEffect,                // 오픈 시 효과
+  whenClose: closeEffect,  // 세력화 시 효과
+  whenTurnEnd: turnEndEffect,                // ���
 }
 
 abstract class card implements Icard {
@@ -19,26 +22,21 @@ abstract class card implements Icard {
   canMissionary: boolean;
   keyWords: string[];
   createInfluence: number;
+  religion: string[];
+  whenOpen: openEffect;
+  whenClose: closeEffect;
+  whenTurnEnd: turnEndEffect;
 
-  constructor(cardcode: number, cardname: string, classes: 1 | 2 | 3 | 5, canMissionary: boolean, keyWords: string[]) {
+  constructor(cardcode: number, cardname: string, classes: 1 | 2 | 3 | 5, canMissionary: boolean, keyWords: string[], religion: string[]) {
     this.cardcode = cardcode;
     this.cardname = cardname;
     this.classes = classes;
     this.canMissionary = canMissionary;
     this.keyWords = keyWords;
     this.createInfluence = this.classes;
-  }
-  
-  whenOpen = (state: state): state => {
-    // TODO: Open card logic
-    return state;
-  }
-  
-  whenInfluentialization = (state: state): state => {
-    // TODO: Influentialization card logic
-    return state;
+    this.religion = [...religion];
   }
 }
 
 
-export { Icard, card };
+export default card;

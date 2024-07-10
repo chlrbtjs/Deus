@@ -1,23 +1,22 @@
 import state from "./state";
 
 interface Ieffects {
-  openEffect?: (state: state) => state;
-  closeEffect?: (state: state) => state;
+  openEffect?: (state: state, useOrder: number) => state,
+  closeEffect?: (state: state, useOrder: number) => state,
+  turnEndEffect?: (state: state, useOrder: number) => state,
 }
 
 abstract class openEffect implements Ieffects {
-  openEffect: (state: state) => state;
+  abstract openEffect: (state: state, useOrder: number) => state;
 }
 
 abstract class closeEffect implements Ieffects {
-  closeEffect: (state: state) => state;
+  abstract closeEffect: (state: state, useOrder: number) => state;
 }
 
-class goldenTeardropPriest_OpenEffect extends openEffect {
-  openEffect = (state: state): state => {
-    // TODO: goldenTeardropPriest_OpenEffect implementation
-    return state;
-  }
+abstract class turnEndEffect implements Ieffects {
+  abstract turnEndEffect: (state: state, useOrder: number) => state;
 }
 
-export { goldenTeardropPriest_OpenEffect };
+
+export { openEffect, closeEffect, turnEndEffect };
