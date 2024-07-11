@@ -5,9 +5,9 @@ import player from "./player";
 class KtuluVictory extends victory {
   isVictory = (state: state, player: player) => {
     if (state.players[player.order].sacrifice >= 20) {
-      return true;
+      state.players[player.order].isWin = true;
     }
-    return false;
+    return;
   }
 }
 

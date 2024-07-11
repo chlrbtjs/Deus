@@ -4,13 +4,16 @@ import victory from "./victory";
 import { KtuluVictory } from "./victorys";
 
 interface Iplayer {
-  fields: card[],        // 카드 내는곳
+  fields: card[],         // 카드 내는곳
   hands: number,          // 손패 수, 손패 내용은 아직 미구현
   influence: number,      // 세력 수
   deckType: string,       // 덱타입, 승리조건을 위함
-  victorys: victory[];   // 승리조건
+  victorys: victory[];    // 승리조건, 승리 조건들을 하나씩 체크하고 자신의 isWin를 true로 바꿈
   sacrifice: number,      // 제물 바친 수
-  order: 0 | 1 | 2;       // 순서
+  order: 0 | 1 | 2,       // 순서
+  isWin: boolean,     // 승리 여부
+
+  toJson(): object,
 }
 
 class player implements Iplayer {
@@ -18,9 +21,11 @@ class player implements Iplayer {
   hands: number;
   influence: number;
   deckType: string;
-  victorys: victory[];
   sacrifice: number;
+  isWin: boolean;
   order: 0 | 1 | 2;
+
+  victorys: victory[];
 
   constructor(order: 0 | 1 | 2, deckType: string) {
     this.fields = [];
@@ -29,6 +34,7 @@ class player implements Iplayer {
     this.sacrifice = 0;
     this.deckType = deckType;
     this.order = order;
+    this.isWin = false;
 
     this.setVictory();
   }
@@ -37,6 +43,8 @@ class player implements Iplayer {
     switch (this.deckType) {
       case 'Ktulu':
         this.victorys.push(new KtuluVictory());
+        // this.victorys.push(new AVictory());
+        // this.victorys.push(new BVictory());
         break;
       // 다른 덱 타입들...
       default:
@@ -44,13 +52,23 @@ class player implements Iplayer {
     }
   }
 
-  isVictory(state: state): boolean {
+  isVictory(state: state): void {
     for (const victory of this.victorys) {
-      if (victory.isVictory(state, this)) {
-        return true;
-      }
+      victory.isVictory(state, this);
     }
-    return false;
+    return;
+  }
+
+  toJson(): object {
+    return {
+      fields: this.fields.map(card => card.toJson()),
+      hands: this.hands,
+      influence: this.influence,
+      deckType: this.deckType,
+      sacrifice: this.sacrifice,
+      order: this.order,
+      isWin: this.isWin,
+    };
   }
 }
 

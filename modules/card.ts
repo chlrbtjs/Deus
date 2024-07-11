@@ -10,9 +10,10 @@ interface Icard {
   createInfluence: number,    // 세력 생성치
   religion: string[],         // 종교, 혹시 모르니까 배열로
 
-  whenOpen: openEffect,                // 오픈 시 효과
-  whenClose: closeEffect,  // 세력화 시 효과
-  whenTurnEnd: turnEndEffect,                // ���
+  whenOpen: openEffect,                 // 오픈 시 효과
+  whenClose: closeEffect,               // 세력화 시 효과
+  whenTurnEnd: turnEndEffect,           // 턴 종료시 효과
+  toJson(): object,                 // JSON 표현
 }
 
 abstract class card implements Icard {
@@ -36,6 +37,8 @@ abstract class card implements Icard {
     this.createInfluence = this.classes;
     this.religion = [...religion];
   }
+
+  abstract toJson() : object;
 }
 
 

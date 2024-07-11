@@ -2,6 +2,8 @@ import player from "./player";
 
 interface Igamestate {
   players: player[],
+
+  toJson(): object,
 }
 
 class state implements Igamestate {
@@ -9,6 +11,12 @@ class state implements Igamestate {
 
   constructor(players: player[]) {
       this.players = [...players];
+  }
+
+  toJson(): object {
+    return {
+      players: this.players.map(player => player.toJson()),
+    };
   }
 }
 
