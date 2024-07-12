@@ -11,7 +11,7 @@ interface Iplayer {
   victorys: victory[];    // 승리조건, 승리 조건들을 하나씩 체크하고 자신의 isWin를 true로 바꿈
   sacrifice: number,      // 제물 바친 수
   order: 0 | 1 | 2,       // 순서
-  isWin: boolean,     // 승리 여부
+  isWin: boolean,         // 승리 여부
 
   toJson(): object,
 }
