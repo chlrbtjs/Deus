@@ -16,8 +16,8 @@ class state implements Igamestate {
   currentPlayer: 0 | 1 | 2;
   orderIndex: (0 | 1 | 2)[];
 
-  constructor(players: player[], turnCount: number = 0, currentPlayer: 0 | 1 | 2 = 0, orderIndex: (0 | 1 | 2)[] = [0, 1, 2]) {
-      this.players = [...players];
+  constructor(decks: string[], turnCount: number = 0, currentPlayer: 0 | 1 | 2 = 0, orderIndex: (0 | 1 | 2)[] = [0, 1, 2]) {
+      this.players = [new player(0, decks[0]), new player(1, decks[1]), new player(2, decks[2])];
       this.turnCount = turnCount;
       this.currentPlayer = currentPlayer; // default to the first player
       this.orderIndex = orderIndex; // default to the first player's order
@@ -30,7 +30,7 @@ class state implements Igamestate {
   }
 
   turnEnd = (): state => {
-    let nextState = new state(this.players, this.turnCount + 1, (this.currentPlayer + 1) % 3  as 0 | 1 | 2, [...this.orderIndex.slice(1), this.orderIndex[0]]);
+    let nextState = new state([...this.players].map(p => p.deckType), this.turnCount + 1, (this.currentPlayer + 1) % 3  as 0 | 1 | 2, [...this.orderIndex.slice(1), this.orderIndex[0]]);
 
     for (const i of this.orderIndex) {
       const p = this.players[i];

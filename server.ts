@@ -1,129 +1,114 @@
 import express, { Request, Response } from 'express';
 import http from 'http';
 import { Server, Socket } from 'socket.io';
+import Game from './modules/game';
+import { start } from 'repl';
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// 타입 정의
-interface Player {
+interface IRoom {
   id: string;
-  name: string;
+  members: Socket[],
+
+  addMember: (socket: Socket) => void;
 }
 
-interface Room {
+interface IallGames {
+  rooms: IRoom[];
+  games: Map<IRoom, Game>;
+}
+
+class Room implements IRoom {
   id: string;
-  players: Player[];
-  state: 'waiting' | 'playing';
+  members: Socket[] = [];
+
+  constructor(id: string) {
+    this.id = id;
+  }
+
+  addMember = (socket: Socket): void => {
+    this.members.push(socket);
+  }
 }
 
-interface GameState {
-  rooms: Map<string, Room>;
-  players: Map<string, { roomId: string; name: string }>;
+class allGames implements IallGames {
+  rooms: IRoom[] = [];
+  games: Map<IRoom, Game> = new Map<IRoom, Game>();
+
+  startGame = (room: IRoom, deckTypes: string[]): void => {
+    const game = new Game(new Map<Socket, 0 | 1 | 2>([[room.members[0], 0], [room.members[1], 1], [room.members[2], 2]]), deckTypes);
+    this.games.set(room, game);
+    room.members.forEach(member => member.emit('gameStart'));
+  }
 }
 
-interface JoinRoomData {
-  roomId: string;
-  playerName: string;
-}
-
-interface MakeMoveData {
-  roomId: string;
-  move: any; // 실제 게임에 맞게 타입을 정의해야 합니다
-}
+let allgames = new allGames();
+let roomof = new Map<string, Room>();
 
 // 미들웨어 설정
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 게임 상태 관리
-const gameState: GameState = {
-  rooms: new Map<string, Room>(),
-  players: new Map<string, { roomId: string; name: string }>()
-};
-
 // 라우트 설정
 app.get('/api/games', (req: Request, res: Response) => {
-  const games = Array.from(gameState.rooms.values());
-  res.json(games);
+  
 });
 
 app.post('/api/games', (req: Request, res: Response) => {
-  const { roomId, playerName } = req.body;
-  if (gameState.rooms.has(roomId)) {
-    return res.status(400).json({ error: 'Room already exists' });
-  }
-  gameState.rooms.set(roomId, { id: roomId, players: [], state: 'waiting' });
-  res.status(201).json({ message: 'Game created', roomId });
+  
 });
 
 app.get('/api/games/:roomId', (req: Request, res: Response) => {
-  const { roomId } = req.params;
-  const room = gameState.rooms.get(roomId);
-  if (!room) {
-    return res.status(404).json({ error: 'Game not found' });
-  }
-  res.json(room);
+  
 });
 
 // Socket.IO 이벤트 처리
 io.on('connection', (socket: Socket) => {
   console.log(`New client connected ${socket.id}`);
 
-  socket.on('joinRoom', ({ roomId, playerName }: JoinRoomData) => {
-    const room = gameState.rooms.get(roomId);
-    if (room && room.players.length < 2) {
+  socket.on('joinRoom', (roomId: string) => {
+    let room = allgames.rooms.find(r => r.id === roomId);
+    if (room) {
       socket.join(roomId);
-      room.players.push({ id: socket.id, name: playerName });
-      gameState.players.set(socket.id, { roomId, name: playerName });
-      io.to(roomId).emit('playerJoined', { players: room.players });
-      
-      if (room.players.length === 2) {
-        room.state = 'playing';
-        io.to(roomId).emit('gameStart', { state: room.state });
-      }
+      roomof.set(socket.id, room);
+      room.addMember(socket);
     } else {
-      socket.emit('joinError', { message: 'Unable to join room' });
+      socket.join(roomId);
+      room = new Room(roomId);
+      roomof.set(socket.id, room);
+      room.addMember(socket);
+      allgames.rooms.push(room);
+    }
+
+    if (room.members.length === 3) {
+      allgames.startGame(room, ['A', 'B', 'C']);
+      //TODO, 게임 시작 시유저 정보를 저장할 수 있는 클래스 생성, joinRoom신호를 받을때 덱 타입을 받아서 저장, ['A', 'B', 'C']을 고치기
     }
   });
 
-  socket.on('makeMove', ({ roomId, move }: MakeMoveData) => {
-    const room = gameState.rooms.get(roomId);
-    if (room && room.state === 'playing') {
-      // 게임 로직 처리
-      // ...
+  // socket.on('disconnect', () => {
+  //   const playerData = gameState.players.get(socket.id);
+  //   if (playerData) {
+  //     const { roomId } = playerData;
+  //     const room = gameState.rooms.get(roomId);
+  //     if (room) {
+  //       room.players = room.players.filter(p => p.id !== socket.id);
+  //       if (room.players.length === 0) {
+  //         gameState.rooms.delete(roomId);
+  //       } else {
+  //         io.to(roomId).emit('playerLeft', { players: room.players });
+  //       }
+  //     }
+  //     gameState.players.delete(socket.id);
+  //   }
+  //   console.log('Client disconnected');
 
-      io.to(roomId).emit('moveMade', { playerId: socket.id, move });
-    }
-  });
-
-  socket.on('disconnect', () => {
-    const playerData = gameState.players.get(socket.id);
-    if (playerData) {
-      const { roomId } = playerData;
-      const room = gameState.rooms.get(roomId);
-      if (room) {
-        room.players = room.players.filter(p => p.id !== socket.id);
-        if (room.players.length === 0) {
-          gameState.rooms.delete(roomId);
-        } else {
-          io.to(roomId).emit('playerLeft', { players: room.players });
-        }
-      }
-      gameState.players.delete(socket.id);
-    }
-    console.log('Client disconnected');
-
-  });
+  // });
   
   socket.on('makeroom', (roomId) => {
-    if (gameState.rooms.has(roomId)) {
-      
-    }
-    else {
-      gameState.rooms.set(roomId, { id: roomId, players: [], state: 'waiting' });
-    }
+    
   })
 });
 
