@@ -5,6 +5,7 @@ interface Igamestate {
   turnCount: number,
   currentPlayer: 0 | 1 | 2,
   orderIndex: (0 | 1 | 2)[],
+  generalPublic: number, // 가운데 쌓여있는 신도발사대, TODO: 현재 이 파일에서만 작성됨, 바꿔야 할 부분이 있는지 확인하기
 
   toJson(): object,
   turnEnd: () => Igamestate,
@@ -15,6 +16,7 @@ class state implements Igamestate {
   turnCount: number;
   currentPlayer: 0 | 1 | 2;
   orderIndex: (0 | 1 | 2)[];
+  generalPublic: number;
 
   constructor(decks: string[], turnCount: number = 0, currentPlayer: 0 | 1 | 2 = 0, orderIndex: (0 | 1 | 2)[] = [0, 1, 2]) {
       this.players = [new player(0, decks[0]), new player(1, decks[1]), new player(2, decks[2])];
