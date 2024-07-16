@@ -1,6 +1,8 @@
 import card from "./card";
 import * as effects  from "./effects";
 
+const cards = new Map<number, card>();
+
 class goldenTeardropPriest extends card {
   constructor() { 
     super(1010101, 'goldenTeardropPriest', 3, true, [], ['Ktulu']);
@@ -20,3 +22,6 @@ class goldenTeardropPriest extends card {
     };
   };
 }
+cards.set(1010101, new goldenTeardropPriest());
+
+export default cards;

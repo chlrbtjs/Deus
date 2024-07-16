@@ -3,6 +3,7 @@ import state from "./state";
 import victory from "./victory";
 import { KtuluVictory } from "./victorys";
 import Deck from "./deck";
+import order from "./order";
 
 interface Iplayer {
   fields: card[],         // 카드 내는곳
@@ -11,9 +12,9 @@ interface Iplayer {
   deckType: string,       // 덱타입, 승리조건을 위함
   victorys: victory[];    // 승리조건, 승리 조건들을 하나씩 체크하고 자신의 isWin를 true로 바꿈
   sacrifice: number,      // 제물 바친 수
-  order: 0 | 1 | 2,       // 순서
+  order: order,       // 순서
   isWin: boolean,         // 승리 여부
-  hands: card[],          // 핸드
+  hands: number[],          // 핸드
 
   toJson(): object,
 }
@@ -25,13 +26,13 @@ class player implements Iplayer {
   deckType: string;
   sacrifice: number;
   isWin: boolean;
-  order: 0 | 1 | 2;
-  hands: card[];
+  order: order;
+  hands: number[];
   deck: Deck;
 
   victorys: victory[];
 
-  constructor(order: 0 | 1 | 2, deckType: string) {
+  constructor(order: order, deckType: string) {
     this.fields = [];
     this.handsNum = 1;
     this.influence = 0;
@@ -87,17 +88,8 @@ class player implements Iplayer {
     };
   }
 
-  toJsonWithHands(): object {
-    return {
-      fields: this.fields.map(card => card.toJson()),
-      hands: this.hands.map(card => card.toJson()),
-      handsnum: this.handsNum,
-      influence: this.influence,
-      deckType: this.deckType,
-      sacrifice: this.sacrifice,
-      order: this.order,
-      isWin: this.isWin,
-    };
+  handsToJson(): object {
+    return this.hands;
   }
 }
 

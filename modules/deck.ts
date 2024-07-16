@@ -2,18 +2,18 @@ import card from "./card";
 
 interface IDeck {
   deckType: string,
-  cards: card[],
+  cards: number[],
   size: number,
   shuffle: () => void,
-  draw(): card | undefined,
+  draw(): number | undefined,
 }
 
 class Deck implements IDeck {
   deckType: string;
-  cards: card[];
+  cards: number[];
   size: number;
 
-  constructor(deckType: string, cards: card[]) {
+  constructor(deckType: string, cards: number[]) {
     this.deckType = deckType;
     this.cards = cards;
     this.size = cards.length;
@@ -30,7 +30,7 @@ class Deck implements IDeck {
     return this.size === 0;
   }
 
-  draw(): card | undefined {
+  draw(): number | undefined {
     if (this.size === 0) {
       return undefined;
     }
