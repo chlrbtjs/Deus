@@ -3,49 +3,51 @@ import http from 'http';
 import { Server, Socket } from 'socket.io';
 import Game from './modules/game';
 import { start } from 'repl';
+import { IFieldSelectData } from './modules/data';
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-interface IRoom {
-  id: string;
-  members: Socket[],
-
-  addMember: (socket: Socket) => void;
+interface IUser {
+  name: string;
+  state: 'Gaming' | 'Mainpage';
+  roomId: string;
+  gameId: string;
+  deckType: string;
+  socket: Socket;
 }
 
-interface IallGames {
-  rooms: IRoom[];
-  games: Map<IRoom, Game>;
-}
+class User implements IUser {
+  name: string;
+  state: 'Gaming' | 'Mainpage';
+  roomId: string;
+  gameId: string;
+  deckType: string;
+  socket: Socket;
 
-class Room implements IRoom {
-  id: string;
-  members: Socket[] = [];
-
-  constructor(id: string) {
-    this.id = id;
+  constructor(socket: Socket, name: string = `Guest ${connectedUsers.size}`, state: 'Gaming' | 'Mainpage' = 'Mainpage') {
+    this.socket = socket;
+    this.name = name;
+    this.state = state;
+    this.roomId = "";
+    this.gameId = "";
   }
 
-  addMember = (socket: Socket): void => {
-    this.members.push(socket);
+  joinRoom(roomId: string) {
+    this.state = 'Gaming';
+    this.roomId = roomId;
+    this.socket.join(this.roomId);
+  }
+
+  changeDeckType(deckType: string) {
+    this.deckType = deckType;
   }
 }
 
-class allGames implements IallGames {
-  rooms: IRoom[] = [];
-  games: Map<IRoom, Game> = new Map<IRoom, Game>();
+let connectedUsers: Map<string, User> = new Map();
+let games: Map<string, Game> = new Map();
 
-  startGame = (room: IRoom, deckTypes: string[]): void => {
-    const game = new Game(new Map<Socket, 0 | 1 | 2>([[room.members[0], 0], [room.members[1], 1], [room.members[2], 2]]), deckTypes);
-    this.games.set(room, game);
-    room.members.forEach(member => member.emit('gameStart'));
-  }
-}
-
-let allgames = new allGames();
-let roomof = new Map<string, Room>();
 
 // 미들웨어 설정
 app.use(express.json());
@@ -67,49 +69,51 @@ app.get('/api/games/:roomId', (req: Request, res: Response) => {
 // Socket.IO 이벤트 처리
 io.on('connection', (socket: Socket) => {
   console.log(`New client connected ${socket.id}`);
+  connectedUsers.set(socket.id, new User(socket));
 
-  socket.on('joinRoom', (roomId: string) => {
-    let room = allgames.rooms.find(r => r.id === roomId);
-    if (room) {
-      socket.join(roomId);
-      roomof.set(socket.id, room);
-      room.addMember(socket);
-    } else {
-      socket.join(roomId);
-      room = new Room(roomId);
-      roomof.set(socket.id, room);
-      room.addMember(socket);
-      allgames.rooms.push(room);
+
+  socket.on('joinGame', (roomId: string) => {
+    if (games.has(roomId) && games.get(roomId)!.playerCount < 3) {
+      const game: Game = games.get(roomId)!;                // 바로 위 if문에서 검사됨
+      const user: User = connectedUsers.get(socket.id)!;    // connection, disconnect이벤트로 보장됨
+      user.joinRoom(roomId);
+      game.joinPlayer(socket, user.deckType);
     }
-
-    if (room.members.length === 3) {
-      allgames.startGame(room, ['A', 'B', 'C']);
-      //TODO, 게임 시작 시유저 정보를 저장할 수 있는 클래스 생성, joinRoom신호를 받을때 덱 타입을 받아서 저장, ['A', 'B', 'C']을 고치기
+    else {
+      const game: Game = new Game(roomId);
+      const user: User = connectedUsers.get(socket.id)!;    // connection, disconnect이벤트로 보장됨
+      user.joinRoom(roomId);
+      game.joinPlayer(socket, user.deckType);
     }
   });
 
-  // socket.on('disconnect', () => {
-  //   const playerData = gameState.players.get(socket.id);
-  //   if (playerData) {
-  //     const { roomId } = playerData;
-  //     const room = gameState.rooms.get(roomId);
-  //     if (room) {
-  //       room.players = room.players.filter(p => p.id !== socket.id);
-  //       if (room.players.length === 0) {
-  //         gameState.rooms.delete(roomId);
-  //       } else {
-  //         io.to(roomId).emit('playerLeft', { players: room.players });
-  //       }
-  //     }
-  //     gameState.players.delete(socket.id);
-  //   }
-  //   console.log('Client disconnected');
+  socket.on('playCard', (cardIndex: number, selectData: IFieldSelectData = { userNumber: 'self', fieldNumber: -1 }) => {
+    const id = socket.id;
+    const user: User = connectedUsers.get(id)!;
+    if (user.state === 'Gaming') {
+      const game: Game = games.get(user.gameId)!;
+      game.playCard(id, cardIndex, selectData);
+    }
+    else {
+      socket.emit('errorMessage', 'You are not in the game.');
+      console.error(`User ${id} tried to play card but is not in the game.`);
+    }
+  });
 
-  // });
+  socket.on('disconnect', () => {
+    const user: User = connectedUsers.get(socket.id)!;
+    if (user.state === 'Gaming') {
+      const game: Game = games.get(user.gameId)!;
+      // game.leavePlayer(socket.id);
+      io.to(user.roomId).emit('playerLeft', { players: game.players });
+    }
+    connectedUsers.delete(socket.id);
+    console.log(`Client disconnected ${socket.id}`);
+  });
   
-  socket.on('makeroom', (roomId) => {
+  // socket.on('makeroom', (roomId) => {
     
-  })
+  // })
 });
 
 // 서버 시작
