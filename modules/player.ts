@@ -53,7 +53,7 @@ class player implements Iplayer {
         break;
       // 다른 덱 타입들...
       default:
-        throw new Error('Invalid deck type');
+        // throw new Error('Invalid deck type');
     }
   }
 

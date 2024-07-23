@@ -20,5 +20,5 @@
     "experimentalDecorators": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
-  }
+  },
 }

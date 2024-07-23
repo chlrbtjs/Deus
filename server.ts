@@ -8,7 +8,12 @@ import User from './modules/user';
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: "*",  // 개발 중에는 모든 출처를 허용합니다. 프로덕션에서는 특정 도메인으로 제한하세요.
+    methods: ["GET", "POST"]
+  }
+}); // 클라이언트가 웹 브라우저가 아니라면 {} 필요 없음
 
 let connectedUsers: Map<string, User> = new Map();
 let games: Map<string, Game> = new Map();
@@ -28,7 +33,19 @@ app.post('/api/games', (req: Request, res: Response) => {
 });
 
 app.get('/api/games/:roomId', (req: Request, res: Response) => {
-  
+  const roomId = req.params.roomId;
+  console.log(roomId);
+  console.log(games);
+  console.log(games.has(roomId));
+  console.log(games.get(roomId));
+  if (games.has(roomId)) {
+    const game: Game = games.get(roomId)!;
+    console.log(game);
+    res.json({game: game.state?.toJson()});
+  }
+  else {
+    res.status(404).json({ message: 'Game not found' });
+  }
 });
 
 // Socket.IO 이벤트 처리
@@ -38,17 +55,24 @@ io.on('connection', (socket: Socket) => {
 
 
   socket.on('joinGame', (roomId: string) => {
+    console.log(`User ${socket.id} joined game ${roomId}`);
     if (games.has(roomId) && games.get(roomId)!.playerCount < 3) {
       const game: Game = games.get(roomId)!;                // 바로 위 if문에서 검사됨
       const user: User = connectedUsers.get(socket.id)!;    // connection, disconnect이벤트로 보장됨
       user.joinRoom(roomId);
       game.joinPlayer(socket, user);
+      io.to(roomId).emit('playerJoined', user.name);
+    }
+    else if ( games.has(roomId) ) {
+      socket.emit('errorMessage', 'Game is full');
     }
     else {
       const game: Game = new Game(roomId);
       const user: User = connectedUsers.get(socket.id)!;    // connection, disconnect이벤트로 보장됨
       user.joinRoom(roomId);
       game.joinPlayer(socket, user);
+      io.to(roomId).emit('playerJoined', user.name);
+      games.set(roomId, game);
     }
   });
 

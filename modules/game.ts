@@ -36,9 +36,11 @@ class Game implements IGame {
     this.orders = new Map<string, order>();
     this.roomId = roomId;
     this.isWaiting = true;
+    this.playerCount = 0;
   }
 
   gameStart() {
+    console.log('gameStart');
     this.isWaiting = false;
     this.state = new state([...this.users.values()].map(u => u.deckType));
     // 순서 정하기
@@ -48,10 +50,12 @@ class Game implements IGame {
   }
 
   joinPlayer(socket: Socket, user: IUserIngame) {
+    console.log('joinPlayer');
     this.users.set(socket.id, user);
     this.playerCount++;
 
     if (this.playerCount === 3) {
+      console.log('Game Start in joinPlayer');
       this.gameStart();
     }
   }
